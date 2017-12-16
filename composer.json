@@ -1,5 +1,5 @@
 {
-    "name": "faonni/module-storelocator",
+    "name": "faonni/module-order-force-email",
     "description": "Extension force send order confirmation email.",
     "type": "magento2-module",
 	"version": "2.0.1",
