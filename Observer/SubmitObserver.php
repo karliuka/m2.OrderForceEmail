@@ -11,6 +11,7 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
+use Faonni\OrderForceEmail\Helper\Data as OrderEmailHelper;
 
 /**
  * Submit Observer
@@ -29,24 +30,34 @@ class SubmitObserver implements ObserverInterface
      *
      * @var \Psr\Log\LoggerInterface
      */
-    protected $_logger;    
+    protected $_logger; 
+    
+    /**
+     * Helper
+     *
+     * @var \Faonni\OrderForceEmail\Helper\Data
+     */
+    protected $_helper;    
     
     /**
      * Initialize Observer
      *
      * @param OrderSender $orderSender
-     * @param LoggerInterface $logger     
+     * @param LoggerInterface $logger 
+     * @param OrderEmailHelper $helper     
      */
     public function __construct(
 		OrderSender $orderSender,
-		LoggerInterface $logger 
+		LoggerInterface $logger,
+		OrderEmailHelper $helper
 	) {
         $this->_orderSender = $orderSender;
-        $this->_logger = $logger;        
+        $this->_logger = $logger;
+        $this->_helper = $helper;        
     }
     
     /**
-     * Add Location Meta Tag
+     * Send Order Email
      *
      * @param Observer $observer
      * @return void
@@ -55,8 +66,18 @@ class SubmitObserver implements ObserverInterface
     {
         /** @var  \Magento\Sales\Model\Order $order */
         $order = $observer->getEvent()->getOrder();
+        if (!$this->_helper->isForce()) {
+			/** @var  \Magento\Quote\Model\Quote $quote */
+			$quote = $observer->getEvent()->getQuote();
+			/**
+			* a flag to set that there will be redirect to third party after confirmation
+			*/
+			$redirectUrl = $quote->getPayment()->getOrderPlaceRedirectUrl();
+			if ($redirectUrl || !$order->getCanSendNewEmailFlag()) {
+				return;
+			}
+        }        
         $order->setCanSendNewEmailFlag(false);
-        
         $this->send($order);
     }
     
