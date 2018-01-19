@@ -2,6 +2,7 @@
 
 Extension send order confirmation emails when an order is placed and paid with online payment methods (paypal, authorize etc). 
 
+### Configuration page
 <img alt="Magento2 Order Force Email" src="https://karliuka.github.io/m2/order-force-email/config.png" style="width:100%"/>
 
 ## Install with Composer as you go
