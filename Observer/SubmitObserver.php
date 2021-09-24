@@ -1,17 +1,16 @@
 <?php
 /**
- * Copyright © 2011-2018 Karliuka Vitalii(karliuka.vitalii@gmail.com)
- * 
+ * Copyright © Karliuka Vitalii(karliuka.vitalii@gmail.com)
  * See COPYING.txt for license details.
  */
 namespace Faonni\OrderForceEmail\Observer;
 
+use Psr\Log\LoggerInterface;
+use Magento\Sales\Model\Order;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
-use Magento\Sales\Model\Order;
-use Psr\Log\LoggerInterface;
-use Faonni\OrderForceEmail\Helper\Data as OrderEmailHelper;
+use Faonni\OrderForceEmail\Helper\Data as Helper;
 
 /**
  * Submit Observer
@@ -19,80 +18,72 @@ use Faonni\OrderForceEmail\Helper\Data as OrderEmailHelper;
 class SubmitObserver implements ObserverInterface
 {
     /**
-     * Order Sender
-     *
-     * @var \Magento\Sales\Model\Order\Email\Sender\OrderSender
+     * @var OrderSender
      */
-    protected $_orderSender;
-    
+    private $sender;
+
     /**
-     * Logger
-     *
-     * @var \Psr\Log\LoggerInterface
+     * @var LoggerInterface
      */
-    protected $_logger; 
-    
+    private $logger;
+
     /**
-     * Helper
-     *
-     * @var \Faonni\OrderForceEmail\Helper\Data
+     * @var Helper
      */
-    protected $_helper;    
-    
+    private $helper;
+
     /**
      * Initialize Observer
      *
      * @param OrderSender $orderSender
-     * @param LoggerInterface $logger 
-     * @param OrderEmailHelper $helper     
+     * @param LoggerInterface $logger
+     * @param Helper $helper
      */
     public function __construct(
-		OrderSender $orderSender,
-		LoggerInterface $logger,
-		OrderEmailHelper $helper
-	) {
-        $this->_orderSender = $orderSender;
-        $this->_logger = $logger;
-        $this->_helper = $helper;        
+        OrderSender $orderSender,
+        LoggerInterface $logger,
+        Helper $helper
+    ) {
+        $this->sender = $orderSender;
+        $this->logger = $logger;
+        $this->helper = $helper;
     }
-    
+
     /**
-     * Send Order Email
+     * Send order email
      *
      * @param Observer $observer
      * @return void
      */
     public function execute(Observer $observer)
     {
-        /** @var  \Magento\Sales\Model\Order $order */
-        $order = $observer->getEvent()->getOrder();
-        if (!$this->_helper->isForce()) {
-			/** @var  \Magento\Quote\Model\Quote $quote */
-			$quote = $observer->getEvent()->getQuote();
-			/**
-			* a flag to set that there will be redirect to third party after confirmation
-			*/
-			$redirectUrl = $quote->getPayment()->getOrderPlaceRedirectUrl();
-			if ($redirectUrl || !$order->getCanSendNewEmailFlag()) {
-				return;
-			}
-        }        
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $observer->getEvent()->getData('order');
+        if (!$this->helper->isForce()) {
+            /** @var \Magento\Quote\Model\Quote $quote */
+            $quote = $observer->getEvent()->getData('quote');
+            /** a flag to set that there will be redirect to third party after confirmation */
+            $redirectUrl = $quote->getPayment()->getOrderPlaceRedirectUrl();
+            if ($redirectUrl || !$order->getCanSendNewEmailFlag()) {
+                return;
+            }
+        }
         $order->setCanSendNewEmailFlag(false);
         $this->send($order);
     }
-    
+
     /**
-     * Send Order Confirmation Email To The Customer
+     * Send order confirmation email to the customer
      *
      * @param Order $order
      * @return void
      */
-    public function send(Order $order)
+    private function send(Order $order)
     {
-		try {
-			$this->_orderSender->send($order);
-		} catch (\Exception $e) {
-			$this->_logger->critical($e);
-		}
-    }    
-}  
+        try {
+            $this->sender->send($order);
+        } catch (\Exception $e) {
+            $this->logger->critical($e);
+        }
+    }
+}

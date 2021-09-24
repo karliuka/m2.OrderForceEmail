@@ -1,7 +1,6 @@
 <?php
 /**
- * Copyright © 2011-2018 Karliuka Vitalii(karliuka.vitalii@gmail.com)
- * 
+ * Copyright © Karliuka Vitalii(karliuka.vitalii@gmail.com)
  * See COPYING.txt for license details.
  */
 namespace Faonni\OrderForceEmail\Helper;
@@ -10,35 +9,35 @@ use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\App\Helper\AbstractHelper;
 
 /**
- * OrderForceEmail Helper
+ * Order force email helper
  */
-class Data extends AbstractHelper 
+class Data extends AbstractHelper
 {
     /**
-     * Force Email Config Path
-     */	
-    const XML_CONFIG_EMAIL_FORCE = 'sales_email/order/force';
-    
-    /**
-     * Checks Force Email Functionality Should be Enabled
-     *
-     * @param int|Store $store     
-     * @return string|null
+     * Force email config path
      */
-    public function isForce($store = null)
-    {
-        return $this->_getConfig(self::XML_CONFIG_EMAIL_FORCE, $store);
-    }
-    
+    const XML_EMAIL_FORCE = 'sales_email/order/force';
+
     /**
-     * Retrieve Store Configuration Data
+     * Checks force email functionality should be enabled
+     *
+     * @param string|null $storeId
+     * @return bool
+     */
+    public function isForce($storeId = null)
+    {
+        return $this->isSetFlag(self::XML_EMAIL_FORCE, $storeId);
+    }
+
+    /**
+     * Retrieve config flag
      *
      * @param string $path
-     * @param int|Store $store	 
-     * @return string|null
+     * @param string|null $storeId
+     * @return bool
      */
-    protected function _getConfig($path, $store = null)
+    private function isSetFlag($path, $storeId = null)
     {
-        return $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_STORE, $store);
+        return $this->scopeConfig->isSetFlag($path, ScopeInterface::SCOPE_STORE, $storeId);
     }
 }
